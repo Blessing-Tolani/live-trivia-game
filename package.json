@@ -1,0 +1,23 @@
+{
+  "name": "live-trivia-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Blessing-Tolani/live-trivia-game.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Blessing-Tolani/live-trivia-game/issues"
+  },
+  "homepage": "https://github.com/Blessing-Tolani/live-trivia-game#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}
