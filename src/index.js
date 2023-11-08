@@ -3,13 +3,13 @@ const path = require("path")
 const http = require("http")
 const socketio = require("socket.io")
 const formatMessage = require("./utils/formatMessage")
-
 const {
   addPlayer,
   removePlayer,
   getPlayersByRoom,
   getPlayer,
-} = require("./utils/players.js")
+} = require("./utils/players")
+const { setGame } = require("./utils/game")
 
 const app = express()
 const port = 8000
@@ -70,6 +70,22 @@ io.on("connection", (socket) => {
         formatMessage(player.playerName, message)
       )
       callback()
+    }
+  })
+
+  socket.on("getQuestion", (data, callback) => {
+    console.log("show a question")
+    const { error, player } = getPlayer(socket.id)
+    console.log(player)
+    if (error) return callback(error.message)
+    if (player) {
+      setGame((game) => {
+        console.log(game)
+        io.to(player.room).emit("question", {
+          playerName: player.playerName,
+          ...game.prompt,
+        })
+      })
     }
   })
 })
