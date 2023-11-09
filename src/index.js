@@ -9,7 +9,7 @@ const {
   getPlayersByRoom,
   getPlayer,
 } = require("./utils/players")
-const { setGame } = require("./utils/game")
+const { Game, setGame } = require("./utils/game")
 
 const app = express()
 const port = 8000
@@ -73,19 +73,53 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on("getQuestion", (data, callback) => {
-    console.log("show a question")
+  socket.on("getQuestion", async (data, callback) => {
     const { error, player } = getPlayer(socket.id)
-    console.log(player)
     if (error) return callback(error.message)
     if (player) {
-      setGame((game) => {
-        console.log(game)
-        io.to(player.room).emit("question", {
-          playerName: player.playerName,
-          ...game.prompt,
-        })
-      })
+      const game = await setGame();
+      io.to(player.room).emit('question', {
+        playerName: player.playerName,
+        ...game.prompt,
+        });
+    }
+  })
+
+  socket.on('sendAnswer', (answer, callback) => {
+    const { error, player } = getPlayer(socket.id)
+    if (error) return callback(error.message)
+    if (player) {
+      const { isRoundOver } = new Game({
+        event: "sendAnswer",
+        playerId: player.id,
+        answer: answer,
+        room: player.room,
+      }).setGameStatus();
+
+      io.to(player.room).emit(
+        "answer",
+        {
+          ...formatMessage(player.playerName, answer),
+          isRoundOver,
+        }
+      )
+      callback()
+    }
+  })
+
+  socket.on("getAnswer", (callback) => {
+    const { error, player } = getPlayer(socket.id)
+    if (error) return callback(error.message);
+    if(player){
+      const { correctAnswer } = new Game({
+        event: "getAnswer",
+        playerId: player.id,
+        room: player.room,
+      }).getGameStatus();
+      io.to(player.room).emit(
+        "correctAnswer",
+        correctAnswer
+      )
     }
   })
 })

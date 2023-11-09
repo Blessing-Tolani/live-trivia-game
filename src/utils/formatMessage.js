@@ -1,8 +1,10 @@
+const {format} = require('date-fns')
+
 const formatMessage = (playerName, text) => {
   return {
     playerName,
     text,
-    createdAt: new Date().getTime(),
+    createdAt: format(new Date(), 'hh:mm a'),
   }
 }
 

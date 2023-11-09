@@ -26,11 +26,12 @@ socket.emit("join", { playerName, room }, (error) => {
   }
 })
 
+const messageTemplate = document.querySelector("#message-template").innerHTML
+
 // socket.emit("disconnect", { playerName: "Blessing", room: "10" })
 
 socket.on("message", ({ playerName, text, createdAt }) => {
   const chatMessages = document.querySelector(".chat__messages")
-  const messageTemplate = document.querySelector("#message-template").innerHTML
   const template = Handlebars.compile(messageTemplate)
 
   const html = template({ playerName, text, createdAt })
@@ -58,13 +59,9 @@ chatForm.addEventListener("submit", (event) => {
   const chatFormInput = chatForm.querySelector(".chat__message")
   const chatFormButton = chatForm.querySelector(".chat__submit-btn")
 
-  console.log("hey")
   chatFormButton.setAttribute("disabled", "disabled")
-  const element = event.target.elements
   const message = event.target.elements.message.value
 
-  console.log(element)
-  console.log(message)
 
   socket.emit("sendMessage", message, (error) => {
     chatFormButton.removeAttribute("disabled")
@@ -88,12 +85,19 @@ const decodeHTMLEntities = (text) => {
   return textArea.value
 }
 
+const triviaForm = document.querySelector(".trivia__form")
+const triviaFormSubmitButton = triviaForm.querySelector(".trivia__submit-btn")
+const triviaAnswers = document.querySelector(".trivia__answers");
+const triviaRevealAnswerButton = document.querySelector(
+  ".trivia__answer-btn"
+);
+
+
 socket.on("question", ({ answers, playerName, question }) => {
-  const triviaForm = document.querySelector(".trivia__form")
   const triviaQuestion = document.querySelector(".trivia__question")
   const triviaAnswers = document.querySelector(".trivia__answers")
   const triviaQuestionButton = document.querySelector(".trivia__question-btn")
-  const triviaFormSubmitButton = triviaForm.querySelector(".trivia__submit-btn")
+
 
   const questionTemplate = document.querySelector(
     "#trivia-question-template"
@@ -115,4 +119,42 @@ socket.on("question", ({ answers, playerName, question }) => {
   })
 
   triviaQuestion.insertAdjacentHTML("beforeend", html)
+})
+
+triviaForm.addEventListener("submit", (event) => {
+  event.preventDefault()
+  triviaFormSubmitButton.setAttribute("disabled", "disabled")
+  const answer = event.target.elements.answer.value
+
+  socket.emit("sendAnswer", answer, (error) => {
+
+    triviaFormSubmitButton.removeAttribute("disabled")
+    event.target.elements.answer.value = ""
+    if (error) return alert(error)
+  })
+})
+
+socket.on("answer", ({ playerName, isRoundOver, createdAt, text }) => {
+  const template = Handlebars.compile(messageTemplate)
+  const html = template({ playerName, text, createdAt })
+  triviaAnswers.insertAdjacentHTML("afterBegin", html);
+  if (isRoundOver) {
+    triviaRevealAnswerButton.removeAttribute("disabled");
+  }
+})
+
+triviaRevealAnswerButton.addEventListener("click", () => {
+  triviaFormSubmitButton.setAttribute("disabled", "disabled")
+  socket.emit("getAnswer", (error) => {
+    if (error) return alert(error)
+  })
+})
+
+socket.on("correctAnswer", (text) => {
+  const answerTemplate = document.querySelector("#trivia-answer-template").innerHTML
+  const template = Handlebars.compile(answerTemplate)
+  const html = template({text})
+  triviaAnswers.insertAdjacentHTML("beforeend", html);
+  triviaRevealAnswerButton.setAttribute("disabled", "disabled");
+  triviaQuestionButton.removeAttribute("disabled")
 })
