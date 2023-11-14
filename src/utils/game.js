@@ -1,5 +1,5 @@
 const { getPlayersByRoom } = require("./players.js")
-const fetch = require('node-fetch');
+const fetch = require("node-fetch")
 
 const game = {
   prompt: {
@@ -18,7 +18,7 @@ class Game {
   constructor({ event, playerId, answer, room }) {
     this.event = event
     this.playerId = playerId
-    if(answer){
+    if (answer) {
       this.answer = answer
     }
     this.room = room
@@ -26,7 +26,6 @@ class Game {
 
   getGameStatus() {
     const { correctAnswer, isRoundOver } = game.status
-
     if (this.event === "getAnswer" && isRoundOver) {
       return { correctAnswer }
     }
@@ -43,29 +42,27 @@ class Game {
         Object.keys(submissions).length === getPlayersByRoom(this.room).length
     }
     const status = game.status
-    return status;
+    return status
   }
 }
 
 const setGame = async () => {
   try {
-    const response = await fetch("https://opentdb.com/api.php?amount=1&category=18")
-    const data = await response.json();
-    const {
-      correct_answer,
-      incorrect_answers,
-      question,
-    } = data.results[0];
+    const response = await fetch(
+      "https://opentdb.com/api.php?amount=1&category=18"
+    )
+    const data = await response.json()
+    const { correct_answer, incorrect_answers, question } = data.results[0]
     game.status.submissions = {}
     game.status.correctAnswer = correct_answer
-       game.prompt = {
-        answers: shuffle([correct_answer, ...incorrect_answers]),
-        question,
-      };
-      return game;
-  }
-  catch (error) {
-    console.log(error);
+    game.prompt = {
+      answers: shuffle([correct_answer, ...incorrect_answers]),
+      question,
+    }
+
+    return game
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -78,7 +75,12 @@ const shuffle = (array) => {
   return array
 }
 
+const getGameAnswerOptions = () => {
+  return game.prompt.answers
+}
+
 module.exports = {
   Game,
   setGame,
+  getGameAnswerOptions,
 }

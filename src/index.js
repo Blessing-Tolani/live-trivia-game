@@ -8,8 +8,9 @@ const {
   removePlayer,
   getPlayersByRoom,
   getPlayer,
+  points,
 } = require("./utils/players")
-const { Game, setGame } = require("./utils/game")
+const { Game, setGame, getGameAnswerOptions } = require("./utils/game")
 
 const app = express()
 const port = 8000
@@ -27,21 +28,24 @@ io.on("connection", (socket) => {
     const { error, newPlayer } = addPlayer({ id: socket.id, playerName, room })
 
     if (error) return callback(error.message)
-    callback()
+    if (newPlayer) {
+      socket.join(newPlayer.room)
+      socket.emit("message", formatMessage("Admin", "Welcome!"))
+      socket.broadcast
+        .to(newPlayer.room)
+        .emit(
+          "message",
+          formatMessage("Admin", `${newPlayer.playerName} has joined the game!`)
+        )
 
-    socket.join(newPlayer.room)
-    socket.emit("message", formatMessage("Admin", "Welcome!"))
-    socket.broadcast
-      .to(newPlayer.room)
-      .emit(
-        "message",
-        formatMessage("Admin", `${newPlayer.playerName} has joined the game!`)
-      )
-
-    io.in(newPlayer.room).emit("room", {
-      room: newPlayer.room,
-      players: getPlayersByRoom(newPlayer.room),
-    })
+      io.in(newPlayer.room).emit("room", {
+        room: newPlayer.room,
+        players: getPlayersByRoom(newPlayer.room),
+      })
+      io.in(newPlayer.room).emit("showPoints", {
+        points,
+      })
+    }
   })
 
   socket.on("disconnect", () => {
@@ -76,16 +80,18 @@ io.on("connection", (socket) => {
   socket.on("getQuestion", async (data, callback) => {
     const { error, player } = getPlayer(socket.id)
     if (error) return callback(error.message)
+    console.log(player)
     if (player) {
-      const game = await setGame();
-      io.to(player.room).emit('question', {
+      const game = await setGame()
+
+      io.to(player.room).emit("question", {
         playerName: player.playerName,
         ...game.prompt,
-        });
+      })
     }
   })
 
-  socket.on('sendAnswer', (answer, callback) => {
+  socket.on("sendAnswer", (answer, callback) => {
     const { error, player } = getPlayer(socket.id)
     if (error) return callback(error.message)
     if (player) {
@@ -94,32 +100,60 @@ io.on("connection", (socket) => {
         playerId: player.id,
         answer: answer,
         room: player.room,
-      }).setGameStatus();
+      }).setGameStatus()
+      const answers = getGameAnswerOptions()
+      let doesAnswerMatchOptions = false
 
-      io.to(player.room).emit(
-        "answer",
-        {
+      for (let i = 0; i < answers.length; i++) {
+        if (answers[i].toLocaleLowerCase() == answer.toLocaleLowerCase()) {
+          doesAnswerMatchOptions = true
+        }
+      }
+
+      if (doesAnswerMatchOptions) {
+        io.to(player.room).emit("answer", {
           ...formatMessage(player.playerName, answer),
           isRoundOver,
-        }
-      )
+        })
+      } else {
+        callback("Invalid answer")
+      }
+
       callback()
     }
   })
 
   socket.on("getAnswer", (callback) => {
     const { error, player } = getPlayer(socket.id)
-    if (error) return callback(error.message);
-    if(player){
-      const { correctAnswer } = new Game({
+    if (error) return callback(error.message)
+    if (player) {
+      const { correctAnswer, submissions } = new Game({
         event: "getAnswer",
         playerId: player.id,
         room: player.room,
-      }).getGameStatus();
-      io.to(player.room).emit(
-        "correctAnswer",
-        correctAnswer
-      )
+      }).getGameStatus()
+      io.to(player.room).emit("correctAnswer", correctAnswer)
+      const correctAnswersId = []
+
+      for (let key in submissions) {
+        if (submissions[key] === correctAnswer) {
+          correctAnswersId.push(key)
+          console.log(key)
+        }
+      }
+
+      if (correctAnswersId.length) {
+        for (let i = 0; i < correctAnswersId.length; i++) {
+          const person = points.find(
+            (item) => item.playerId === correctAnswersId[i]
+          )
+          console.log(person)
+          person.point = person.point + 1
+        }
+      }
+      console.log(points)
+
+      socket.emit("showPoints", { points })
     }
   })
 })

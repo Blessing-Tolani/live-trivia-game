@@ -76,6 +76,13 @@ main {
   text-transform: uppercase;
 }
 
+.game-info-style {
+  margin-top: 20px;
+}
+.point-list {
+  list-style: none;
+}
+
 /* || REGISTRATION FORM PAGE */
 .registration-form {
   font-family: "Courier New", Courier, monospace;

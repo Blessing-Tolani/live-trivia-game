@@ -1,4 +1,5 @@
 const players = []
+const points = []
 
 // add a new player
 const addPlayer = ({ id, playerName, room }) => {
@@ -12,7 +13,9 @@ const addPlayer = ({ id, playerName, room }) => {
   room = room.trim()
 
   const existingPlayer = players.length
-    ? players.find((player) => player.id === id)
+    ? players.find(
+        (player) => player.playerName.toLowerCase() === playerName.toLowerCase()
+      )
     : null
   if (existingPlayer) {
     return {
@@ -23,6 +26,10 @@ const addPlayer = ({ id, playerName, room }) => {
   const newPlayer = { id, playerName, room }
   players.push(newPlayer)
 
+  if (!points.find((item) => item.playerName === playerName)) {
+    const newPlayerPoint = { playerName, playerId: id, point: 0 }
+    points.push(newPlayerPoint)
+  }
   return { newPlayer }
 }
 
@@ -66,4 +73,5 @@ module.exports = {
   removePlayer,
   getPlayersByRoom,
   getPlayer,
+  points,
 }
