@@ -14,6 +14,8 @@ const game = {
   },
 }
 
+let noOfQuestions = 0;
+
 class Game {
   constructor({ event, playerId, answer, room }) {
     this.event = event
@@ -25,9 +27,9 @@ class Game {
   }
 
   getGameStatus() {
-    const { correctAnswer, isRoundOver } = game.status
+    const { correctAnswer, isRoundOver,   submissions } = game.status
     if (this.event === "getAnswer" && isRoundOver) {
-      return { correctAnswer }
+      return { correctAnswer,   submissions }
     }
   }
 
@@ -59,8 +61,8 @@ const setGame = async () => {
       answers: shuffle([correct_answer, ...incorrect_answers]),
       question,
     }
-
-    return game
+    noOfQuestions += 1;
+    return {noOfQuestions, game}
   } catch (error) {
     console.log(error)
   }
@@ -83,4 +85,5 @@ module.exports = {
   Game,
   setGame,
   getGameAnswerOptions,
+  noOfQuestions
 }

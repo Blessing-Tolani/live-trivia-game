@@ -10,7 +10,7 @@ const {
   getPlayer,
   points,
 } = require("./utils/players")
-const { Game, setGame, getGameAnswerOptions } = require("./utils/game")
+const { Game, setGame, getGameAnswerOptions, noOfQuestions } = require("./utils/game")
 
 const app = express()
 const port = 8000
@@ -45,6 +45,7 @@ io.on("connection", (socket) => {
       io.in(newPlayer.room).emit("showPoints", {
         points,
       })
+      io.in(newPlayer.room).emit("questionCount", {noOfQuestions})
     }
   })
 
@@ -80,15 +81,17 @@ io.on("connection", (socket) => {
   socket.on("getQuestion", async (data, callback) => {
     const { error, player } = getPlayer(socket.id)
     if (error) return callback(error.message)
-    console.log(player)
     if (player) {
-      const game = await setGame()
-
+      const {noOfQuestions, game} = await setGame()
+  
       io.to(player.room).emit("question", {
         playerName: player.playerName,
         ...game.prompt,
       })
+
+      socket.emit("questionCount", {noOfQuestions})
     }
+
   })
 
   socket.on("sendAnswer", (answer, callback) => {
@@ -134,7 +137,6 @@ io.on("connection", (socket) => {
       }).getGameStatus()
       io.to(player.room).emit("correctAnswer", correctAnswer)
       const correctAnswersId = []
-
       for (let key in submissions) {
         if (submissions[key] === correctAnswer) {
           correctAnswersId.push(key)
@@ -147,11 +149,9 @@ io.on("connection", (socket) => {
           const person = points.find(
             (item) => item.playerId === correctAnswersId[i]
           )
-          console.log(person)
           person.point = person.point + 1
         }
       }
-      console.log(points)
 
       socket.emit("showPoints", { points })
     }

@@ -2,7 +2,7 @@ const players = []
 const points = []
 
 // add a new player
-const addPlayer = ({ id, playerName, room }) => {
+const addPlayer =  ({ id, playerName, room }) => {
   if (!playerName || !room) {
     return {
       error: new Error("Please enter a player name and room!"),
@@ -22,15 +22,18 @@ const addPlayer = ({ id, playerName, room }) => {
       error: new Error("Player name is in use"),
     }
   }
-
-  const newPlayer = { id, playerName, room }
-  players.push(newPlayer)
-
-  if (!points.find((item) => item.playerName === playerName)) {
-    const newPlayerPoint = { playerName, playerId: id, point: 0 }
-    points.push(newPlayerPoint)
+  else {
+    const newPlayer = { id, playerName, room }
+    players.push(newPlayer)
+    if (!points.find((item) => item.playerName === playerName)) {
+      const newPlayerPoint = { playerName, playerId: id, point: 0 }
+      points.push(newPlayerPoint)
+    }
+    return { newPlayer }
   }
-  return { newPlayer }
+
+
+
 }
 
 // get a player by id
@@ -39,6 +42,7 @@ const getPlayer = (id) => {
   if (!player) {
     return {
       error: new Error("Player not found!"),
+      
     }
   }
 

@@ -8,7 +8,10 @@
   </head>
   <body>
     <main>
-      <section class="section game-info"></section>
+      <section class="section game-info">
+        <div class="question-no"></div>
+        <div class="point-info"></div>
+      </section>
 
       <section class="section trivia">
         <h2 class="subheading">trivia</h2>
@@ -89,6 +92,13 @@
           </li>
         {{/each}}
       </ul>
+    </script>
+
+    <script id="question-no-template" type="text/x-handlebars-template">
+      <h3 class="game-info-style">
+        Questions:
+        {{noOfQuestions}}
+      </h3>  
     </script>
 
     <script id="trivia-question-template" type="text/x-handlebars-template">

@@ -41,6 +41,8 @@ socket.emit("join", { playerName, room }, (error) => {
 
 const messageTemplate = document.querySelector("#message-template").innerHTML
 const gameInfo = document.querySelector(".game-info")
+const pointInfo = document.querySelector(".point-info")
+const questionNo = document.querySelector(".question-no")
 
 socket.on("message", ({ playerName, text, createdAt }) => {
   const chatMessages = document.querySelector(".chat__messages")
@@ -58,17 +60,25 @@ socket.on("room", ({ room, players }) => {
     "#game-info-template"
   ).innerHTML
   const template = Handlebars.compile(sidebarTemplate)
-  gameInfo.innerHTML = template({ room, players })
+  gameInfo.insertAdjacentHTML("afterbegin", template({ room, players }))
 })
 
 socket.on("showPoints", ({ points }) => {
-  console.log(points)
   const pointBarTemplate = document.querySelector(
     "#point-info-template"
   ).innerHTML
 
   const pointTemplate = Handlebars.compile(pointBarTemplate)
-  gameInfo.insertAdjacentHTML("beforeend", pointTemplate({ points }))
+  pointInfo.innerHTML =  pointTemplate({ points })
+})
+
+socket.on("questionCount", ({noOfQuestions}) => {
+  const questionNoTemplate = document.querySelector(
+    "#question-no-template"
+  ).innerHTML
+
+  const  template = Handlebars.compile(questionNoTemplate)
+  questionNo.innerHTML =   template({ noOfQuestions })
 })
 
 const chatForm = document.querySelector(".chat__form")
